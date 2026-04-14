@@ -19,9 +19,6 @@ services:
     environment:
       - MONGO_URL=mongodb://mongodb:27017
       - DB_NAME=script_genius
-      - YT_DLP_PATH=yt-dlp
-      - FFMPEG_PATH=ffmpeg
-      - FFPROBE_PATH=ffprobe
     depends_on:
       - mongodb
     networks:
