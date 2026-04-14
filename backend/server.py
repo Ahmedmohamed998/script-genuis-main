@@ -460,7 +460,7 @@ async def get_video_metadata(video_url: str) -> Dict:
                 "--dump-json",
                 "--no-download",
                 "--socket-timeout", "15",
-                "--js-runtimes", "nodejs",
+                "--js-runtimes", "node",
             ] + args + [video_url]
             
             def run_yt_dlp():
@@ -528,7 +528,7 @@ async def download_video_audio(video_url: str) -> bytes:
             "--audio-quality", "5",
             "--socket-timeout", "30",
             "--no-playlist",
-            "--js-runtimes", "nodejs",
+            "--js-runtimes", "node",
             "--ffmpeg-location", FFMPEG_DIR if os.name == 'nt' else FFMPEG_PATH,
             "-o", output_template,
         ] + args 
