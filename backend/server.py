@@ -605,7 +605,10 @@ async def transcribe_audio(audio_data: bytes) -> str:
             FFMPEG_PATH, "-i", tmp_path, "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", "-y", wav_path
         ]
         def run_ffmpeg():
-            return subprocess.run(convert_cmd, capture_output=True)
+            res = subprocess.run(convert_cmd, capture_output=True)
+            if res.returncode != 0:
+                logger.error(f"FFmpeg conversion failed: {res.stderr.decode(errors='replace')}")
+            return res
             
         await asyncio.to_thread(run_ffmpeg)
 
@@ -637,6 +640,8 @@ async def transcribe_audio(audio_data: bytes) -> str:
                 if evt.result.reason == speechsdk.ResultReason.Canceled:
                     cancellation_details = evt.result.cancellation_details
                     logger.error(f"Speech Recognition canceled: {cancellation_details.reason}")
+                    if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                        logger.error(f"Error details: {cancellation_details.error_details}")
                 done = True
                 
             speech_recognizer.recognized.connect(recognized_cb)
