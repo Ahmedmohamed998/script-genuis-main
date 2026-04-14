@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: script-genius-db
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - script-genius-network
+
+  backend:
+    build: ./backend
+    container_name: script-genius-backend
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./backend/.env
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017
+      - DB_NAME=script_genius
+      - YT_DLP_PATH=yt-dlp
+      - FFMPEG_PATH=ffmpeg
+      - FFPROBE_PATH=ffprobe
+    depends_on:
+      - mongodb
+    networks:
+      - script-genius-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - REACT_APP_BACKEND_URL=http://script.matbkh-elcontent.com
+    container_name: script-genius-frontend
+    ports:
+      - "8082:80"
+    depends_on:
+      - backend
+    networks:
+      - script-genius-network
+
+networks:
+  script-genius-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

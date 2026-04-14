@@ -1,0 +1,101 @@
+{
+  "theme": "dark",
+  "archetype": "Swiss & High-Contrast",
+  "archetype_reasoning": "A sleek, dark high-contrast theme best suits a professional creator tool. It minimizes glare for extended editing sessions and feels like a modern film/audio production studio. Bright accents (Warning Yellow) command attention for critical recording or generating actions.",
+  "colors": {
+    "background_primary": "#09090b",
+    "background_secondary": "#18181b",
+    "surface": "#27272a",
+    "text_primary": "#ffffff",
+    "text_secondary": "#a1a1aa",
+    "accent_primary": "#eab308",
+    "accent_secondary": "#ef4444",
+    "border": "#27272a",
+    "success": "#10b981",
+    "warning": "#f59e0b",
+    "error": "#ef4444"
+  },
+  "typography": {
+    "font_heading": "'Outfit', sans-serif",
+    "font_body": "'IBM Plex Sans', sans-serif",
+    "font_mono": "'IBM Plex Mono', monospace",
+    "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-black text-white",
+    "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-bold text-white",
+    "h3": "text-xl sm:text-2xl tracking-tight font-semibold text-white",
+    "h4": "text-lg sm:text-xl font-medium text-white",
+    "body": "text-base leading-relaxed text-zinc-300",
+    "label": "text-xs tracking-[0.2em] uppercase font-bold text-zinc-400"
+  },
+  "spacing": {
+    "section_padding": "py-12 md:py-20",
+    "container_padding": "px-6 md:px-12",
+    "element_gap": "gap-6 md:gap-8"
+  },
+  "components": {
+    "card": {
+      "style": "bg-[#18181b] border border-[#27272a] rounded-xl p-6 shadow-sm",
+      "interaction": "Focuses on sharp inner contrast. Uses 1px border for definition."
+    },
+    "button": {
+      "primary": "bg-yellow-500 text-black font-semibold rounded-lg px-6 py-3 hover:bg-yellow-400 hover:text-black transition-colors focus:ring-2 focus:ring-yellow-300 focus:outline-none",
+      "secondary": "bg-zinc-800 text-white font-medium rounded-lg px-6 py-3 border border-zinc-700 hover:bg-zinc-700 hover:text-white transition-colors focus:ring-2 focus:ring-zinc-600 focus:outline-none",
+      "ghost": "text-zinc-300 hover:text-white hover:bg-white/5 px-4 py-2 rounded-lg transition-colors"
+    },
+    "input": {
+      "style": "bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-colors"
+    },
+    "header": {
+      "style": "sticky top-0 z-50 bg-[#09090b]/80 backdrop-blur-xl border-b border-[#27272a]"
+    }
+  },
+  "icons": {
+    "library": "@phosphor-icons/react",
+    "reasoning": "Phosphor Icons provide a clean, technical, and slightly chunky look that perfectly complements the high-contrast, Swiss dark mode aesthetic."
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-in-out",
+    "enter": "animate-in fade-in slide-in-from-bottom-4 duration-500",
+    "stagger": "delay-[50ms]"
+  },
+  "layout_strategy": {
+    "dashboard": "Mode B: Control Room Grid. 12-column grid system with dense spacing for the editor interface. Use h-full to ensure child elements stretch across columns.",
+    "script_editor": "Multi-pane split layout. Left sidebar for video URLs/transcripts, central main area for Hook/Body/CTA editor, and right sidebar for Claude Chat and Voiceover/Brand settings."
+  },
+  "image_urls": {
+    "backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1761078739436-ccee01f3d89c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGRhcmslMjB0ZXh0dXJlJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzU4OTU1Mjd8MA&ixlib=rb-4.1.0&q=85",
+        "category": "texture",
+        "description": "Dark, moody abstract background with subtle light streaks. Can be used as a low-opacity background behind the main editor area or login screen."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1759771963975-8a4885446f1f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzB8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGF1ZGlvJTIwd2F2ZWZvcm0lMjBkYXJrfGVufDB8fHx8MTc3NTg5NTU1MHww&ixlib=rb-4.1.0&q=85",
+        "category": "texture",
+        "description": "A glowing purple ring of light on black background. Useful for voiceover generation loading states or audio waveform visualization."
+      }
+    ],
+    "avatars": [
+      {
+        "url": "https://images.pexels.com/photos/14589344/pexels-photo-14589344.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "category": "user_avatar",
+        "description": "User avatar for the dashboard profile."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1769636929388-99eff95d3bf1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMGhlYWRzaG90fGVufDB8fHx8MTc3NTg4MTg4OHww&ixlib=rb-4.1.0&q=85",
+        "category": "client_avatar",
+        "description": "Avatar for the 'Hoda' or client approval workflow."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Use pure HTML + Tailwind for complex bento/multi-pane layouts. Do not use generic Shadcn Card layouts if they restrict height/width stretching.",
+    "For the ElevenLabs integration (Demo mode), use a visual audio waveform when 'generating' voiceover.",
+    "Implement the script editor as a structured block editor: Hook (with 5 options toggleable), Body, and CTA as distinct sections.",
+    "Claude Chat should be integrated as a right-hand drawer or sidebar, allowing users to converse while keeping the script editor in view.",
+    "Use Phosphor Icons for all UI icons (install with `yarn add @phosphor-icons/react`).",
+    "Font installation: Import Google Fonts - 'Outfit' and 'IBM Plex Sans'. Outfit for all headings, IBM Plex Sans for body/labels.",
+    "Data-testid attributes MUST be added to all interactive elements for testing.",
+    "The UI should feel technical and advanced. Rely heavily on 1px borders (border-[#27272a]) to separate panels rather than shadows.",
+    "Provide a brand approval workflow section where a thumbnail, ad code, or partnership tag can be added and sent to a client."
+  ]
+}
