@@ -5,6 +5,9 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     git \
     nodejs \
+    libssl-dev \
+    libasound2 \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
