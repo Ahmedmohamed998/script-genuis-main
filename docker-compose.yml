@@ -31,7 +31,7 @@ services:
     build:
       context: ./frontend
       args:
-        - REACT_APP_BACKEND_URL=http://script.matbkh-elcontent.com
+        - REACT_APP_BACKEND_URL=https://script.matbkh-elcontent.com
     container_name: script-genius-frontend
     ports:
       - "8082:80"
