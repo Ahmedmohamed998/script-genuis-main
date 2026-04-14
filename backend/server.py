@@ -459,6 +459,7 @@ async def get_video_metadata(video_url: str) -> Dict:
                 YT_DLP_PATH,
                 "--dump-json",
                 "--no-download",
+                "--extractor-args", "youtube:player_client=ios,android",
                 "--socket-timeout", "15",
                 "--js-runtimes", "node",
             ] + args + [video_url]
@@ -526,6 +527,7 @@ async def download_video_audio(video_url: str) -> bytes:
             "-x",
             "--audio-format", "mp3",
             "--audio-quality", "5",
+            "--extractor-args", "youtube:player_client=ios,android",
             "--socket-timeout", "30",
             "--no-playlist",
             "--js-runtimes", "node",
