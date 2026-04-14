@@ -1621,7 +1621,7 @@ const TrackedAccountsPage = ({ currentProfile }) => {
   const [analyzedVideos, setAnalyzedVideos] = useState([]);
   
   const [formData, setFormData] = useState({
-    platform: "tiktok",
+    platform: "instagram",
     account_url: "",
     account_name: "",
     account_handle: "",
@@ -1898,14 +1898,13 @@ const TrackedAccountsPage = ({ currentProfile }) => {
                     <SelectValue placeholder="Platform" />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181b] border-[#27272a]">
-                    <SelectItem value="tiktok">TikTok</SelectItem>
                     <SelectItem value="instagram">Instagram</SelectItem>
                     <SelectItem value="youtube">YouTube</SelectItem>
                   </SelectContent>
                 </Select>
                 
                 <Input
-                  placeholder="Account URL (e.g., https://tiktok.com/@username)"
+                  placeholder="Account URL (e.g., https://instagram.com/username)"
                   value={formData.account_url}
                   onChange={(e) => setFormData({ ...formData, account_url: e.target.value })}
                   className="bg-[#09090b] border-[#27272a]"
