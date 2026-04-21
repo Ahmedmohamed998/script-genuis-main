@@ -93,11 +93,39 @@ class ClaudeBedrockChat:
 
     async def send_message(self, msg) -> str:
         text = msg.text if hasattr(msg, 'text') else str(msg)
+        image_b64 = getattr(msg, 'image_b64', None)  # optional base64 image
+
+        # Build the content block
+        if image_b64:
+            # Strip data URL prefix if present ("data:image/jpeg;base64,...")
+            import re as _re
+            match = _re.match(r'data:image/(\w+);base64,(.+)', image_b64, _re.DOTALL)
+            if match:
+                media_type = f"image/{match.group(1)}"
+                raw_b64 = match.group(2)
+            else:
+                media_type = "image/jpeg"
+                raw_b64 = image_b64
+
+            content = [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": raw_b64,
+                    }
+                },
+                {"type": "text", "text": text}
+            ]
+        else:
+            content = text
+
         body = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 4096,
             "system": self.system_message,
-            "messages": [{"role": "user", "content": text}]
+            "messages": [{"role": "user", "content": content}]
         }
         response = await asyncio.to_thread(
             self.client.invoke_model,
@@ -108,8 +136,9 @@ class ClaudeBedrockChat:
         return response_body["content"][0]["text"]
 
 class UserMessage:
-    def __init__(self, text: str):
+    def __init__(self, text: str, image_b64: str = None):
         self.text = text
+        self.image_b64 = image_b64  # optional base64 data URL
 
 # Azure STT Integration (Replaces OpenAISpeechToText)
 import azure.cognitiveservices.speech as speechsdk
@@ -276,6 +305,7 @@ class Project(BaseModel):
     thumbnail_url: Optional[str] = None
     ad_code: Optional[str] = ""
     partnership_tag: Optional[str] = ""
+    product_image: Optional[str] = None  # base64 data URL of product image (optional)
     
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
@@ -292,6 +322,7 @@ class ProjectCreate(BaseModel):
     writing_style: str = "natural"
     without_reference: bool = False
     brief: Optional[str] = ""
+    product_image: Optional[str] = None  # base64 data URL
 
 class TranscribeRequest(BaseModel):
     video_url: str
@@ -1729,10 +1760,12 @@ SOURCE CONTENT:
 {features_text}
 
 {"AD SCRIPT - compelling but natural." if project.get("is_ad") else "ORGANIC - authentic and relatable."}
+{"" if not project.get("product_image") else chr(10) + "PRODUCT IMAGE PROVIDED: Study the image carefully. Reference the product appearance, design, and visible features naturally in the hooks."}
 
 Return ONLY valid JSON: [{{"text": "hook text", "style": "style_name", "id": "unique_id"}}]"""
 
-    msg = UserMessage(text=prompt)
+    product_image = project.get("product_image") or None
+    msg = UserMessage(text=prompt, image_b64=product_image)
     response = await chat.send_message(msg)
     
     try:
@@ -1901,10 +1934,12 @@ HOOK: {selected_hook['text']}
 
 Target approximately {body_words} words.
 {"AD SCRIPT - persuasive but natural." if project.get("is_ad") else "ORGANIC - authentic and relatable."}
+{"" if not project.get("product_image") else chr(10) + "PRODUCT IMAGE PROVIDED: Study the image carefully. Reference the product's appearance and features naturally in the body."}
 
 Write ONLY the body content, no hook, no CTA."""
 
-    msg = UserMessage(text=prompt)
+    product_image = project.get("product_image") or None
+    msg = UserMessage(text=prompt, image_b64=product_image)
     body_content = await chat.send_message(msg)
     
     await db.projects.update_one(
@@ -1963,10 +1998,12 @@ HOOK: {selected_hook['text']}
 BODY: {project.get('body_content', '')}
 
 {"AD SCRIPT" if project.get("is_ad") else "ORGANIC CONTENT"}
+{"" if not project.get("product_image") else chr(10) + "PRODUCT IMAGE PROVIDED: Study the image carefully. Reference the product when writing the CTA."}
 
 Write ONLY the CTA, 1-3 sentences max."""
 
-    msg = UserMessage(text=prompt)
+    product_image = project.get("product_image") or None
+    msg = UserMessage(text=prompt, image_b64=product_image)
     cta_content = await chat.send_message(msg)
     
     await db.projects.update_one(
@@ -2095,6 +2132,7 @@ OUTPUT FORMAT (return ONLY a single valid JSON object — no markdown, no commen
 {features_text}
 TARGET TOTAL LENGTH: ~{target_words} words
 {"AD SCRIPT - persuasive but natural." if project.get("is_ad") else "ORGANIC content - authentic and relatable."}
+{"" if not project.get("product_image") else chr(10) + "PRODUCT IMAGE PROVIDED: Study the image carefully. Reference what you see — the product's look, design, and features — naturally in hooks, body, and CTA."}
 
 {"=== REFERENCE SOURCE ===" + chr(10) + source_text[:4000] if source_text else ""}
 
@@ -2104,7 +2142,8 @@ Now produce the JSON. Generate {request.hook_count} diverse hooks, write body_co
         session_id=f"full-script-{project_id}-{uuid.uuid4()}",
         system_message=system_msg
     )
-    response = await chat.send_message(UserMessage(text=user_prompt))
+    product_image = project.get("product_image") or None
+    response = await chat.send_message(UserMessage(text=user_prompt, image_b64=product_image))
 
     # Parse JSON
     resp_text = response.strip()

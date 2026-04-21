@@ -53,6 +53,7 @@ import {
   GlobeHemisphereWest,
   FileArrowDown,
   Queue,
+  ImageSquare,
 } from "@phosphor-icons/react";
 
 // Shadcn UI Components
@@ -2344,6 +2345,26 @@ const NewProjectDialog = ({ isOpen, onClose, brands, currentProfile, onCreate })
     without_reference: false,
     brief: "",
   });
+  const [productImage, setProductImage] = useState(null); // base64
+  const [productImageName, setProductImageName] = useState("");
+  const imageInputRef = useRef(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setProductImage(ev.target.result); // base64 data URL
+      setProductImageName(file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setProductImage(null);
+    setProductImageName("");
+    if (imageInputRef.current) imageInputRef.current.value = "";
+  };
 
   const profileBrands = brands.filter(b => b.profile_id === currentProfile?.id);
 
@@ -2381,10 +2402,13 @@ const NewProjectDialog = ({ isOpen, onClose, brands, currentProfile, onCreate })
       profile_id: currentProfile.id,
       brand_id: formData.brand_id === "none" ? null : formData.brand_id || null,
       key_features: formData.key_features.map((f) => f.trim()).filter(Boolean),
+      product_image: productImage || null,
     };
     onCreate(data);
     onClose();
     setFormData({ name: "", brand_id: "", is_ad: false, key_features: [""], without_reference: false, brief: "" });
+    setProductImage(null);
+    setProductImageName("");
   };
 
   return (
@@ -2512,6 +2536,43 @@ const NewProjectDialog = ({ isOpen, onClose, brands, currentProfile, onCreate })
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Product Image — optional */}
+          <div>
+            <label className="text-xs text-zinc-500 mb-1 block">Product Image (optional)</label>
+            {productImage ? (
+              <div className="relative rounded-lg overflow-hidden border border-[#27272a] bg-[#09090b]">
+                <img src={productImage} alt="product" className="w-full max-h-40 object-contain p-2" />
+                <div className="flex items-center justify-between px-3 py-2 border-t border-[#27272a]">
+                  <span className="text-xs text-zinc-400 truncate max-w-[200px]">{productImageName}</span>
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+                  >
+                    <X size={12} /> Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="w-full border-2 border-dashed border-[#27272a] hover:border-zinc-500 rounded-lg p-4 flex flex-col items-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors bg-[#09090b] cursor-pointer"
+              >
+                <ImageSquare size={24} />
+                <span className="text-xs">Click to upload product image</span>
+                <span className="text-[10px] text-zinc-600">PNG, JPG, WEBP — max 5MB</span>
+              </button>
+            )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
           </div>
         </div>
         <DialogFooter className="mt-6">
