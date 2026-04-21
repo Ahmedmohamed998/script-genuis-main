@@ -654,91 +654,66 @@ async def download_video_audio(video_url: str) -> bytes:
         raise HTTPException(status_code=400, detail="No audio file found after download")
 
 async def transcribe_audio(audio_data: bytes, source_language: str = "auto") -> Dict[str, str]:
-    """Transcribe audio using Azure Cognitive Services Speech SDK.
-
+    """Transcribe audio using AssemblyAI (more reliable than Azure in Docker).
+    
     source_language:
-      - 'auto': Auto-detect between English and Arabic dialects
-      - specific code like 'en', 'ar', etc.
-
+      - 'auto': Auto-detect language
+      - specific code like 'en', 'ar', 'es', etc.
+    
     Returns dict: { 'text': str, 'detected_language': str }
     """
-    import azure.cognitiveservices.speech as speechsdk
-    import time
-
-    speech_key = os.environ.get("AZURE_SPEECH_KEY")
-    service_region = os.environ.get("AZURE_SPEECH_REGION")
-
-    if not speech_key or not service_region:
-        raise HTTPException(status_code=500, detail="Azure Speech services not configured")
-
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+    import assemblyai as aai
+    
+    assemblyai_key = os.environ.get("ASSEMBLYAI_API_KEY")
+    if not assemblyai_key:
+        raise HTTPException(status_code=500, detail="AssemblyAI API key not configured")
+    
+    aai.settings.api_key = assemblyai_key
+    
+    # Save audio to temp file
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
         tmp.write(audio_data)
         tmp_path = tmp.name
-
+    
     try:
-        wav_path = tmp_path + ".converted.wav"
-        convert_cmd = [
-            FFMPEG_PATH, "-i", tmp_path, "-ac", "1", "-ar", "16000", "-sample_fmt", "s16", "-y", wav_path
-        ]
-
-        def run_ffmpeg():
-            res = subprocess.run(convert_cmd, capture_output=True)
-            if res.returncode != 0:
-                logger.error(f"FFmpeg conversion failed: {res.stderr.decode(errors='replace')}")
-            return res
-
-        await asyncio.to_thread(run_ffmpeg)
-
-        def sync_transcribe():
-            speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-
-            auto_detect_source_language_config = speechsdk.languageconfig.AutoDetectSourceLanguageConfig(
-                languages=["ar-EG", "ar-SA", "en-US"]
-            )
-
-            audio_config = speechsdk.AudioConfig(filename=wav_path)
-            speech_recognizer = speechsdk.SpeechRecognizer(
-                speech_config=speech_config,
-                auto_detect_source_language_config=auto_detect_source_language_config,
-                audio_config=audio_config
-            )
-
-            done = False
-            transcript_parts = []
-
-            def recognized_cb(evt):
-                if evt.result.reason == speechsdk.ResultReason.RecognizedSpeech:
-                    transcript_parts.append(evt.result.text)
-
-            def stopped_cb(evt):
-                nonlocal done
-                if evt.result.reason == speechsdk.ResultReason.Canceled:
-                    cancellation_details = evt.result.cancellation_details
-                    logger.error(f"Speech Recognition canceled: {cancellation_details.reason}")
-                    if cancellation_details.reason == speechsdk.CancellationReason.Error:
-                        logger.error(f"Error details: {cancellation_details.error_details}")
-                done = True
-
-            speech_recognizer.recognized.connect(recognized_cb)
-            speech_recognizer.session_stopped.connect(stopped_cb)
-            speech_recognizer.canceled.connect(stopped_cb)
-
-            speech_recognizer.start_continuous_recognition()
-            while not done:
-                time.sleep(0.1)
-            speech_recognizer.stop_continuous_recognition()
-
-            return " ".join(transcript_parts)
-
-        text = await asyncio.to_thread(sync_transcribe)
-        detected_lang = source_language if source_language != "auto" else "ar"
-        return {"text": text, "detected_language": detected_lang}
-
+        logger.info(f"Transcribing audio with AssemblyAI (language={source_language})...")
+        
+        # Configure transcription
+        config_params = {
+            "speech_models": ["universal-2"],  # Use universal-2 model (99 languages)
+            "punctuate": True,
+            "format_text": True
+        }
+        if source_language != "auto":
+            config_params["language_code"] = source_language
+        
+        config = aai.TranscriptionConfig(**config_params)
+        transcriber = aai.Transcriber(config=config)
+        transcript = transcriber.transcribe(tmp_path)
+        
+        if transcript.status == aai.TranscriptStatus.error:
+            logger.error(f"AssemblyAI error: {transcript.error}")
+            raise HTTPException(status_code=500, detail=f"Transcription failed: {transcript.error}")
+        
+        detected_lang = transcript.language_code or source_language
+        if detected_lang == "auto":
+            detected_lang = "en"  # fallback
+        
+        logger.info(f"✅ AssemblyAI transcription successful! Language: {detected_lang}, Length: {len(transcript.text)} chars")
+        
+        return {
+            "text": transcript.text,
+            "detected_language": detected_lang
+        }
+    
+    except Exception as e:
+        logger.error(f"AssemblyAI transcription error: {e}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+    
     finally:
+        # Cleanup temp file
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
-        if 'wav_path' in locals() and os.path.exists(wav_path):
-            os.unlink(wav_path)
 
 
 async def translate_text_to_english(text: str, source_hint: str = "") -> Dict[str, Any]:

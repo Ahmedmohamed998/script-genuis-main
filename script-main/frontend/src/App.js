@@ -923,7 +923,7 @@ const ChatInterface = ({ projectId, profileId, onScriptUpdate }) => {
 
 const CaptionPanel = ({ captions, hashtags, hashtagsCategorized, captionTips, activePlatform, onGenerate, isLoading }) => {
   const [selectedCaption, setSelectedCaption] = useState(0);
-  const [platform, setPlatform] = useState(activePlatform || "instagram");
+  const [platform, setPlatform] = useState(activePlatform || "tiktok");
   const [tone, setTone] = useState("auto");
   const [showAllHashtags, setShowAllHashtags] = useState(false);
   
@@ -950,6 +950,7 @@ const CaptionPanel = ({ captions, hashtags, hashtagsCategorized, captionTips, ac
   };
 
   const platformOptions = [
+    { id: "tiktok", label: "TikTok", icon: TiktokLogo },
     { id: "instagram", label: "Instagram", icon: InstagramLogo },
     { id: "youtube", label: "YouTube", icon: YoutubeLogo },
   ];
@@ -1901,7 +1902,7 @@ const TrackedAccountsPage = ({ currentProfile }) => {
       });
       setIsDialogOpen(false);
       setFormData({
-        platform: "instagram",
+        platform: "tiktok",
         account_url: "",
         account_name: "",
         account_handle: "",
@@ -2755,7 +2756,7 @@ const ProjectEditor = ({ project, brands, currentProfile, onUpdate, onBack }) =>
     }
   };
 
-  const generateCaption = async (platform = "instagram", tone = "auto") => {
+  const generateCaption = async (platform = "tiktok", tone = "auto") => {
     setIsLoading({ ...isLoading, caption: true });
     try {
       const res = await axios.post(`${API}/projects/${project.id}/generate-caption`, {

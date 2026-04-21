@@ -1,0 +1,34 @@
+{
+  "summary": "Tested 3 new endpoints (generate-full-script, regenerate-body, generate-script-captions) after AWS Bedrock credentials were added. All 5 backend tests passed (24.96s). Frontend smoke test confirms Full Script button, Captions tab, and manual transcript UI work end-to-end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "passed_tests": [
+    "POST /api/projects/{id}/generate-full-script (mode=auto) -> 5 hooks + body + cta, persisted to DB",
+    "POST /api/projects/{id}/regenerate-body -> new body generated, old body archived in body_versions[], selected_hook_indices updated",
+    "POST /api/projects/{id}/regenerate-body with invalid hook_id -> 400 as expected",
+    "POST /api/projects/{id}/generate-script-captions count=5 -> 3-5 captions returned",
+    "POST /api/projects/{id}/generate-script-captions with ref_caption -> style-mimicked captions returned",
+    "Frontend loads, new project creation, manual transcript add (toast 'Transcript added!')",
+    "Hooks tab shows 'Generate Hooks (5)' button (data-testid=generate-full-script-btn present)",
+    "Captions tab renders 'Caption Options' panel, ref-caption-input textarea, 'Generate 5 Captions' button (data-testid=generate-captions-btn)",
+    "No JS/console errors on page"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_full_script_generation.py",
+    "/app/test_reports/pytest/pytest_full_script.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py line 2193-2194: complex inline ternary accessing selected_hook_indices[0] could IndexError if list is empty but truthy-checked against hooks; current guard `project.get('selected_hook_indices') and hooks` is OK but the expression is hard to read — extract to a helper.",
+    "Endpoint mismatch between docs and code: main agent noted '/regenerate-body-from-hook' but actual route is '/regenerate-body' (server.py line 2174). Update docs/frontend accordingly if not already done.",
+    "server.py is ~3188 lines — exceeds 700-line threshold; recommend splitting into routers/modules (scripts, captions, transcripts, profiles).",
+    "generate_full_script and regenerate_body duplicate prompt-building logic (profile/brand/features/lang); extract into a shared helper."
+  ],
+  "updated_files": ["/app/backend/tests/test_full_script_generation.py"],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% smoke"},
+  "seed_data_creation": "Created TEST_FullScript_* and TEST_UI_* projects (auto-deleted by fixture and UI test left 1 project behind - harmless)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "AWS Bedrock credentials in backend/.env are now working — Claude generation via generate-full-script, regenerate-body, and generate-script-captions all respond within ~5-10s each. BASE_URL must be passed as env var when running pytest (REACT_APP_BACKEND_URL=... pytest ...). Mix/Pick dialog (fs-mode-mix, fs-mode-pick) only appears when multiple transcripts present; with single transcript, generate-full-script auto-executes.",
+  "mocked_apis": {}
+}
